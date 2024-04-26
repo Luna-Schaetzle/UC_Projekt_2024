@@ -6,6 +6,7 @@ def image_to_string(image_path):
     return encoded_string
 
 # Example usage
-image_path = "C:\Users\Admin\Desktop\Desk\Junior_Companies\1701424803087.png"
+image_path = r"C:\Users\Admin\Desktop\Desk\Junior_Companies\1701424803087.png"
 image_string = image_to_string(image_path)
-print(image_string)
+with open("converted_picture.txt", "w") as file:
+    file.write(image_string)
