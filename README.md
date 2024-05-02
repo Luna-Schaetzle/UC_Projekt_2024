@@ -36,3 +36,8 @@ Du planst ein System, das folgende Funktionen integriert:
 
 ### Verlauf und Fortschritt
 Noch nicht angefangen 
+
+### Teilnehmer
+- Maximilian Kili 
+- Gabriel Mrkonja 
+- Luna Schätzle 
