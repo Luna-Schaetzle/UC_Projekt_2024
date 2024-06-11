@@ -8,9 +8,13 @@ https://en.opensuse.org/HCL:Raspberry_Pi3
 
 # Facial Recognition
 https://www.tomshardware.com/how-to/raspberry-pi-facial-recognition
+https://github.com/ageitgey/face_recognition
+https://realpython.com/face-recognition-with-python/
+
 
 # Minecraft Server
-https://www.tomshardware.com/how-to/raspberry-pi-minecraft-server
+ https://www.tomshardware.com/how-to/raspberry-pi-minecraft-server
+
 
 # Web Server
 https://www.tomshardware.com/news/raspberry-pi-web-server,40174.html
