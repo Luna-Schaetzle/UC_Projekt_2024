@@ -12,7 +12,7 @@ ipAdress = '192.168.12.84'
 streamAddress = 'http://' + ipAdress + ':8080/video'
 
 # Verwende die eingebaute Webcam (index 0)
-cap = cv2.VideoCapture(streamAddress)
+cap = cv2.VideoCapture(0)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -27,17 +27,21 @@ while cap.isOpened():
     face_locations = face_recognition.face_locations(rgb_frame)
     face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
 
+    recognized_names = []
+
     for (top, right, bottom, left), face_encoding in zip(face_locations, face_encodings):
         matches = face_recognition.compare_faces(data["encodings"], face_encoding)
         name = "Unbekannt"
 
-        # Überprüfe, ob ein bekanntes Gesicht übereinstimmt
-        if True in matches:
-            first_match_index = matches.index(True)
-            name = data["names"][first_match_index]
-            # Nimmt immer die erste Übereinstimmung könnte zu Fehlern führen 
-            # wenn der Name im Alphabeth weiter hinten ist wird die Person bei der erkennung benachteiligt
-        
+        # Berechne die Abstände zwischen dem aktuellen Gesicht und den bekannten Gesichtern
+        face_distances = face_recognition.face_distance(data["encodings"], face_encoding)
+        best_match_index = face_distances.argmin()
+
+        # Überprüfe, ob der beste Übereinstimmungswert tatsächlich eine Übereinstimmung ist
+        if matches[best_match_index]:
+            name = data["names"][best_match_index]
+
+        recognized_names.append(name)
 
         # Zeichne ein Rechteck um das Gesicht und schreibe den Namen
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)

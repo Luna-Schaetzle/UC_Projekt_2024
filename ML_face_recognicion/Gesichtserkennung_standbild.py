@@ -6,6 +6,11 @@ import pickle
 with open("face_encodings.pickle", "rb") as f:
     data = pickle.load(f)
 
+# IP Adresse der ESP32-CAM
+#ipAdress = '192.168.12.84'
+# Streaming Adresse aufbauen
+#streamAddress = 'http://' + ipAdress + ':8080/video'
+
 # Verwende die eingebaute Webcam (index 0)
 cap = cv2.VideoCapture(0)
 

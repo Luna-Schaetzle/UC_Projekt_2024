@@ -10,6 +10,9 @@ mp_drawing = mp.solutions.drawing_utils
 # Verwende die eingebaute Webcam (index 0)
 cap = cv2.VideoCapture(0)
 
+# Der Benutzer gibt ein wer gerade eingespeichert wird
+person_name = input("Bitte geben Sie den Namen der Person ein: ")
+
 # Verzeichnis, um Bilder zu speichern
 save_dir = "collected_images"
 if not os.path.exists(save_dir):
@@ -49,7 +52,6 @@ with mp_face_detection.FaceDetection(
                     mp_drawing.draw_detection(image, detection)
                     # Speichere das Bild mit Zeitstempel
                     timestamp = time.strftime("%Y%m%d%H%M%S", time.localtime())
-                    person_name = "Luna"  # Hier den Namen der Person eingeben
                     person_dir = os.path.join(save_dir, person_name)
                     if not os.path.exists(person_dir):
                         os.makedirs(person_dir)
