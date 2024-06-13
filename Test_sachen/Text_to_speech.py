@@ -19,4 +19,5 @@ def speak(text):
 
 if __name__ == "__main__":
     text_to_speak = "Hallo, wie geht es dir heute?"
+    print(text_to_speak)
     speak(text_to_speak)

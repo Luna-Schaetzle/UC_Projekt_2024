@@ -1,10 +1,10 @@
 import cv2
 import face_recognition
 import pickle
-import time
 import mysql.connector
 from datetime import datetime
 import pyttsx3
+import base64
 
 # Lade das trainierte Modell
 with open("face_encodings.pickle", "rb") as f:
@@ -25,7 +25,10 @@ engine = pyttsx3.init()
 # Verwende die eingebaute Webcam (index 0)
 cap = cv2.VideoCapture(0)
 
+last_seen_name = None  # Zuletzt erkannter Name
+
 def capture_and_recognize():
+    global last_seen_name
     ret, frame = cap.read()
     if not ret:
         print("Fehler beim Lesen des Frames.")
@@ -63,20 +66,23 @@ def capture_and_recognize():
     # Persönliche Nachricht anzeigen, als Audio ausgeben und in die Datenbank speichern
     if recognized_names:
         for name in recognized_names:
-            if name != "Unbekannt":
+            if name != "Unbekannt" and name != last_seen_name:
+                last_seen_name = name
                 message = f"Hallo, {name}!"
                 print(message)
                 # Text-to-Speech
                 engine.say(message)
                 engine.runAndWait()
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                cursor.execute("INSERT INTO log (name, timestamp) VALUES (%s, %s)", (name, timestamp))
+                
+                # Bild als Base64 kodieren
+                _, buffer = cv2.imencode('.jpg', frame)
+                image_base64 = base64.b64encode(buffer).decode('utf-8')
+                
+                cursor.execute("INSERT INTO log (name, timestamp, image_base64) VALUES (%s, %s, %s)", (name, timestamp, image_base64))
                 db.commit()
 
 while True:
-    # Warte 10 Sekunden
-    time.sleep(0.1)
-    
     # Erkenne Gesichter und zeige persönliche Nachricht an
     capture_and_recognize()
 

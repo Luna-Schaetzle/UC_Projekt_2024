@@ -5,6 +5,9 @@ import time
 import mysql.connector
 from datetime import datetime
 import pyttsx3
+import base64
+from io import BytesIO
+from PIL import Image
 
 # Lade das trainierte Modell
 with open("face_encodings.pickle", "rb") as f:
@@ -70,12 +73,17 @@ def capture_and_recognize():
                 engine.say(message)
                 engine.runAndWait()
                 timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                cursor.execute("INSERT INTO log (name, timestamp) VALUES (%s, %s)", (name, timestamp))
+                
+                # Bild als Base64 kodieren
+                _, buffer = cv2.imencode('.jpg', frame)
+                image_base64 = base64.b64encode(buffer).decode('utf-8')
+                
+                cursor.execute("INSERT INTO log (name, timestamp, image_base64) VALUES (%s, %s, %s)", (name, timestamp, image_base64))
                 db.commit()
 
 while True:
     # Warte 10 Sekunden
-    time.sleep(0.1)
+    time.sleep(1)
     
     # Erkenne Gesichter und zeige persönliche Nachricht an
     capture_and_recognize()
