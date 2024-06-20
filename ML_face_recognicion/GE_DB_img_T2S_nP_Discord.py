@@ -1,10 +1,3 @@
-# Beschreibung: 
-# Dieses Skript erkennt Gesichter in einem Live-Video-Stream und gibt eine persönliche Nachricht aus. 
-# Die Naricht wird als Audio ausgegeben und in der Console angezeigt.
-# Die erkannten Gesichter werden in einer MySQL-Datenbank gespeichert.
-# Das Skript verwendet die Bibliotheken OpenCV, face_recognition, pickle, mysql.connector, datetime, pyttsx3 und base64.
-
-
 import cv2
 import face_recognition
 import pickle
@@ -12,6 +5,15 @@ import mysql.connector
 from datetime import datetime
 import pyttsx3
 import base64
+import requests
+
+url = "https://discord.com/api/webhooks/1251145698980921408/EZqGL09iQi6f0eBYyUgapG4JUlIPEIgqXwd3PbiaNohHpTYcrZjFTm1P_lyQGM-EaldL" # webhook url, from here: https://i.imgur.com/f9XnAew.png
+
+# for all params, see https://discordapp.com/developers/docs/resources/webhook#execute-webhook
+discord_data = {
+    "content" : "Ein neuer Besucher wurde erkannt!",
+    "username" : "S.T.A.S.I.",
+}
 
 # Lade das trainierte Modell
 with open("face_encodings.pickle", "rb") as f:
@@ -29,10 +31,12 @@ cursor = db.cursor()
 # Text-to-Speech initialisieren
 engine = pyttsx3.init()
 
+
+
 # IP Adresse der ESP32-CAM
 ipAdress = '192.168.180.105'
 # Streaming Adresse aufbauen
-streamAddress = 'http://' + ipAdress + ':81/stream'
+streamAddress = 'http://' + ipAdress + ':8080/video'
 
 # Verwende die eingebaute Webcam (index 0)
 cap = cv2.VideoCapture(0)
@@ -76,7 +80,7 @@ def capture_and_recognize():
 
     cv2.imshow('Erkanntes Bild', frame)
     
-    # Persönliche Nachricht anzeigen, als Audio ausgeben und in die Datenbank speichern
+    # Persönliche Nachricht anzeigen, als Audio ausgeben und in die Datenbank speichern und Discord Nachricht senden
     if recognized_names:
         for name in recognized_names:
             if name != "Unbekannt" and name != last_seen_name:
@@ -94,6 +98,28 @@ def capture_and_recognize():
                 
                 cursor.execute("INSERT INTO log (name, timestamp, image_base64) VALUES (%s, %s, %s)", (name, timestamp, image_base64))
                 db.commit()
+
+
+
+                # Discord Nachricht senden
+
+                
+                discord_data["embeds"] = [
+                    {
+                        "description" : f"**{name}** wurde erkannt! ist um **{timestamp}** eingetroffen.",
+                        "title" : "Person wurde Identifiziert",
+                    }
+                ]
+
+                result = requests.post(url, json = discord_data)
+
+                try:
+                    result.raise_for_status()
+                except requests.exceptions.HTTPError as err:
+                    print(err)
+                else:
+                    print("Payload delivered successfully, code {}.".format(result.status_code))
+    
 
 while True:
     # Erkenne Gesichter und zeige persönliche Nachricht an

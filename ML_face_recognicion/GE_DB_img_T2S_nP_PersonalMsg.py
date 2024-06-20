@@ -1,10 +1,3 @@
-# Beschreibung: 
-# Dieses Skript erkennt Gesichter in einem Live-Video-Stream und gibt eine persönliche Nachricht aus. 
-# Die Naricht wird als Audio ausgegeben und in der Console angezeigt.
-# Die erkannten Gesichter werden in einer MySQL-Datenbank gespeichert.
-# Das Skript verwendet die Bibliotheken OpenCV, face_recognition, pickle, mysql.connector, datetime, pyttsx3 und base64.
-
-
 import cv2
 import face_recognition
 import pickle
@@ -12,6 +5,7 @@ import mysql.connector
 from datetime import datetime
 import pyttsx3
 import base64
+import random
 
 # Lade das trainierte Modell
 with open("face_encodings.pickle", "rb") as f:
@@ -29,14 +23,22 @@ cursor = db.cursor()
 # Text-to-Speech initialisieren
 engine = pyttsx3.init()
 
-# IP Adresse der ESP32-CAM
-ipAdress = '192.168.180.105'
-# Streaming Adresse aufbauen
-streamAddress = 'http://' + ipAdress + ':81/stream'
+# Persönliche Nachrichten
+messages = [
+    "Willkommen zurück, {}! Schön, dich zu sehen.",
+    "Hallo, {}! Wie geht es dir heute?",
+    "Guten Tag, {}! Alles in Ordnung?",
+    "{} ist im Haus! Wie läuft's?",
+    "Hey, {}! Hast du einen schönen Tag?",
+    "Hi, {}! Was gibt's Neues?"
+    "Hallo, {}! Schön, dass du da bist."
+    "Willkommen, {}! Wie war dein Tag?"
+    "{} ist eingetroffen! Wie war die Reise?"
+    "Hey, {}! Schön, dass du wieder da bist."
+]
 
 # Verwende die eingebaute Webcam (index 0)
 cap = cv2.VideoCapture(0)
-
 
 last_seen_name = None  # Zuletzt erkannter Name
 
@@ -70,18 +72,12 @@ def capture_and_recognize():
 
         recognized_names.append(name)
 
-        # Zeichne ein Rechteck um das Gesicht und schreibe den Namen
-        cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-        cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
-
-    cv2.imshow('Erkanntes Bild', frame)
-    
     # Persönliche Nachricht anzeigen, als Audio ausgeben und in die Datenbank speichern
     if recognized_names:
         for name in recognized_names:
             if name != "Unbekannt" and name != last_seen_name:
                 last_seen_name = name
-                message = f"Hallo, {name}!"
+                message = random.choice(messages).format(name)
                 print(message)
                 # Text-to-Speech
                 engine.say(message)

@@ -1,10 +1,3 @@
-# Beschreibung: 
-# Dieses Skript erkennt Gesichter in einem Live-Video-Stream und gibt eine persönliche Nachricht aus. 
-# Die Naricht wird als Audio ausgegeben und in der Console angezeigt.
-# Die erkannten Gesichter werden in einer MySQL-Datenbank gespeichert.
-# Das Skript verwendet die Bibliotheken OpenCV, face_recognition, pickle, mysql.connector, datetime, pyttsx3 und base64.
-
-
 import cv2
 import face_recognition
 import pickle
@@ -12,6 +5,11 @@ import mysql.connector
 from datetime import datetime
 import pyttsx3
 import base64
+from flask import Flask, render_template
+import plotly.express as px
+import pandas as pd
+
+app = Flask(__name__)
 
 # Lade das trainierte Modell
 with open("face_encodings.pickle", "rb") as f:
@@ -29,14 +27,8 @@ cursor = db.cursor()
 # Text-to-Speech initialisieren
 engine = pyttsx3.init()
 
-# IP Adresse der ESP32-CAM
-ipAdress = '192.168.180.105'
-# Streaming Adresse aufbauen
-streamAddress = 'http://' + ipAdress + ':81/stream'
-
 # Verwende die eingebaute Webcam (index 0)
 cap = cv2.VideoCapture(0)
-
 
 last_seen_name = None  # Zuletzt erkannter Name
 
@@ -94,6 +86,31 @@ def capture_and_recognize():
                 
                 cursor.execute("INSERT INTO log (name, timestamp, image_base64) VALUES (%s, %s, %s)", (name, timestamp, image_base64))
                 db.commit()
+
+@app.route('/')
+def timeline():
+    cursor.execute("SELECT name, timestamp, image_base64 FROM log")
+    records = cursor.fetchall()
+
+    # Daten für den Zeitstrahl vorbereiten
+    data = []
+    for row in records:
+        name, timestamp, image_base64 = row
+        timestamp = pd.to_datetime(timestamp)
+        image_src = f"data:image/jpeg;base64,{image_base64}"
+        data.append({'Name': name, 'Timestamp': timestamp, 'Image': image_src})
+
+    df = pd.DataFrame(data)
+
+    fig = px.timeline(df, x_start="Timestamp", x_end="Timestamp", y="Name", hover_data=['Image'])
+    fig.update_yaxes(categoryorder="total ascending")
+    
+    timeline_html = fig.to_html(full_html=False)
+
+    return render_template('timeline.html', plot=timeline_html)
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 while True:
     # Erkenne Gesichter und zeige persönliche Nachricht an
